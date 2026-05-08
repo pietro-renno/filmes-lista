@@ -2,8 +2,9 @@ import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:file_picker/file_picker.dart'; // Para selecionar arquivos
+import 'package:file_picker/file_picker.dart';
 import 'movie_model.dart';
+import 'details_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,40 +18,38 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _synopsisController = TextEditingController();
   
-  Uint8List? _selectedImageBytes; // Guarda a imagem selecionada no momento
+  Uint8List? _selectedImageBytes; 
   Color _accentColor = const Color(0xFF90A4AE); 
-  Color _overlayColor = Colors.black.withValues(alpha: 0.3);
+  Color _overlayColor = Colors.black.withOpacity(0.3);
 
-  // Função para selecionar a imagem do computador
-  Future<void> _pickImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
+  // Requisito 5: Navigator.push para a tela de detalhes
+  void _navegarParaDetalhes(Movie movie) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailsPage(movie: movie, accentColor: _accentColor),
+      ),
     );
+  }
 
+  Future<void> _pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null && result.files.first.bytes != null) {
-      setState(() {
-        _selectedImageBytes = result.files.first.bytes;
-      });
+      setState(() => _selectedImageBytes = result.files.first.bytes);
     }
   }
 
   void _addMovie() {
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("O título é obrigatório!")),
-      );
-      return;
-    }
+    if (_titleController.text.isEmpty) return;
     setState(() {
       _movies.insert(0, Movie(
         title: _titleController.text,
         synopsis: _synopsisController.text,
-        imageBytes: _selectedImageBytes, // Salva os bytes da imagem
+        imageBytes: _selectedImageBytes,
       ));
       _titleController.clear();
       _synopsisController.clear();
-      _selectedImageBytes = null; // Reseta a imagem após adicionar
+      _selectedImageBytes = null;
     });
   }
 
@@ -58,13 +57,13 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       if (_accentColor == const Color(0xFF90A4AE)) {
         _accentColor = const Color(0xFF5C6BC0); 
-        _overlayColor = Colors.indigo.withValues(alpha: 0.2);
+        _overlayColor = Colors.indigo.withOpacity(0.2);
       } else if (_accentColor == const Color(0xFF5C6BC0)) {
         _accentColor = const Color(0xFF26A69A); 
-        _overlayColor = Colors.teal.withValues(alpha: 0.2);
+        _overlayColor = Colors.teal.withOpacity(0.2);
       } else {
         _accentColor = const Color(0xFF90A4AE);
-        _overlayColor = Colors.black.withValues(alpha: 0.3);
+        _overlayColor = Colors.black.withOpacity(0.3);
       }
     });
   }
@@ -77,23 +76,17 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/images/fundo.png"),
-                fit: BoxFit.cover,
-              ),
+              image: DecorationImage(image: AssetImage("assets/images/fundo.png"), fit: BoxFit.cover),
             ),
           ),
-          AnimatedContainer(
-            duration: const Duration(seconds: 1),
-            color: _overlayColor,
-          ),
+          AnimatedContainer(duration: const Duration(seconds: 1), color: _overlayColor),
           SafeArea(
-            child: Column(
+            child: Column( // Requisito 8: Column
               children: [
                 _buildHeader(),
                 _buildInputSection(),
                 const SizedBox(height: 20),
-                Expanded(child: _buildMovieList()),
+                Expanded(child: _buildMovieList()), // Requisito 8: Expanded
               ],
             ),
           ),
@@ -112,15 +105,10 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("MEU ARQUIVO", style: GoogleFonts.montserrat(color: Colors.white60, fontSize: 10, letterSpacing: 4)),
-              Text("FILMES FAVORITOS", 
-                style: GoogleFonts.cinzel(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold,
-                shadows: [Shadow(color: _accentColor, blurRadius: 15)])),
+              Text("CATÁLOGO MÍSTICO", style: GoogleFonts.cinzel(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
             ],
           ),
-          IconButton(
-            icon: Icon(Icons.auto_fix_high, color: _accentColor, size: 28),
-            onPressed: _changeColor,
-          ),
+          IconButton(icon: Icon(Icons.auto_fix_high, color: _accentColor), onPressed: _changeColor),
         ],
       ),
     );
@@ -135,39 +123,22 @@ class _HomePageState extends State<HomePage> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.white10),
-            ),
+            color: Colors.black.withOpacity(0.5),
             child: Column(
               children: [
-                _customTextField(_titleController, "TÍTULO DO FILME", Icons.menu_book),
+                _customTextField(_titleController, "NOME DO FILME", Icons.menu_book),
                 _customTextField(_synopsisController, "SINOPSE", Icons.history_edu),
                 const SizedBox(height: 15),
-                // Botão para selecionar a imagem
                 OutlinedButton.icon(
                   onPressed: _pickImage,
                   icon: Icon(Icons.image_search, color: _accentColor),
-                  label: Text(_selectedImageBytes == null ? "SELECIONAR CAPA DO PC" : "IMAGEM SELECIONADA!", 
-                    style: TextStyle(color: _accentColor)),
-                  style: OutlinedButton.styleFrom(side: BorderSide(color: _accentColor)),
+                  label: Text("CARREGAR CAPA", style: TextStyle(color: _accentColor)),
                 ),
                 const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: _addMovie,
-                  child: Container(
-                    height: 50,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [_accentColor.withValues(alpha: 0.5), Colors.transparent]),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _accentColor.withValues(alpha: 0.4)),
-                    ),
-                    child: Center(
-                      child: Text("ADICIONAR À COLEÇÃO", style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                    ),
-                  ),
+                ElevatedButton(
+                  onPressed: _addMovie,
+                  style: ElevatedButton.styleFrom(backgroundColor: _accentColor.withOpacity(0.3)),
+                  child: Center(child: Text("ADICIONAR", style: GoogleFonts.cinzel(color: Colors.white))),
                 ),
               ],
             ),
@@ -183,45 +154,20 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       itemBuilder: (context, index) {
         final movie = _movies[index];
-        return Container(
+        return Card( // Usando Card para um visual melhor que o ListTile puro
+          color: Colors.black.withOpacity(0.6),
           margin: const EdgeInsets.only(bottom: 15),
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-                child: SizedBox(
-                  width: 85,
-                  height: 120,
-                  child: movie.imageBytes != null 
-                    ? Image.memory(movie.imageBytes!, fit: BoxFit.cover) // Exibe a imagem do PC
-                    : Container(color: Colors.white10, child: const Icon(Icons.movie, color: Colors.white24)),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(movie.title.toUpperCase(), style: GoogleFonts.cinzel(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 5),
-                      Text(movie.synopsis, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.white24),
-                onPressed: () => setState(() => _movies.removeAt(index)),
-              )
-            ],
+          child: ListTile( // Requisito 4: ListTile
+            leading: movie.imageBytes != null 
+                ? Image.memory(movie.imageBytes!, width: 50, fit: BoxFit.cover)
+                : const Icon(Icons.movie),
+            title: Text(movie.title.toUpperCase(), style: GoogleFonts.cinzel(color: _accentColor)),
+            subtitle: const Text("Clique para detalhes", style: TextStyle(color: Colors.white38, fontSize: 10)),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () => setState(() => _movies.removeAt(index)), // Requisito 3: Remover
+            ),
+            onTap: () => _navegarParaDetalhes(movie), // Requisito 5: Navigator.push
           ),
         );
       },
@@ -231,13 +177,11 @@ class _HomePageState extends State<HomePage> {
   Widget _customTextField(TextEditingController controller, String label, IconData icon) {
     return TextField(
       controller: controller,
-      style: GoogleFonts.montserrat(color: Colors.white, fontSize: 14),
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: _accentColor, size: 18),
+        prefixIcon: Icon(icon, color: _accentColor),
         labelText: label,
         labelStyle: GoogleFonts.cinzel(color: Colors.white38, fontSize: 10),
-        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
-        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: _accentColor)),
       ),
     );
   }
