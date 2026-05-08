@@ -12,11 +12,10 @@ class MyMovieApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Cine Hogwarts',
-      // Um tema escuro combina mais com a imagem
+      title: 'Cine Místico',
       theme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: Colors.amber,
+        primarySwatch: Colors.blueGrey,
       ),
       home: const HomePage(),
     );

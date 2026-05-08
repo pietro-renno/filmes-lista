@@ -1,11 +1,13 @@
+import 'dart:typed_data';
+
 class Movie {
   String title;
   String synopsis;
-  String imageUrl;
+  Uint8List? imageBytes; // Armazena a imagem do computador
 
   Movie({
     required this.title,
     required this.synopsis,
-    required this.imageUrl,
+    this.imageBytes,
   });
 }
